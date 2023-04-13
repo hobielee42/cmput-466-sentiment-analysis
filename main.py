@@ -61,10 +61,6 @@ vectorize_layer = TextVectorization(
 
 vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
 
-train_ds = raw_train_ds.map(vectorize_text)
-val_ds = raw_val_ds.map(vectorize_text)
-test_ds = raw_test_ds.map(vectorize_text)
-
 model = tf.keras.Sequential([
     vectorize_layer,
     tf.keras.layers.Dense(16, activation='relu'),
@@ -76,8 +72,16 @@ model.compile(loss=losses.BinaryCrossentropy(from_logits=True),
 
 model.summary()
 
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="logs")
+
 epochs = 10
 history = model.fit(
-        train_ds,
-        validation_data=val_ds,
-        epochs=epochs)
+        raw_train_ds,
+        validation_data=raw_val_ds,
+        epochs=epochs,
+        callbacks=[tensorboard_callback])
+
+loss, accuracy = model.evaluate(raw_test_ds)
+
+print("Loss: ", loss)
+print("Accuracy: ", accuracy)
