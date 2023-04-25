@@ -37,7 +37,7 @@ def custom_standardization(input_data):
 
 def vectorize_text(text, label):
     text = tf.expand_dims(text, -1)
-    return vectorize_layer(text), label
+    return vectorize_layer2(text), label
 
 
 # main
@@ -55,33 +55,62 @@ raw_val_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/train',
 
 raw_test_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
                                                          batch_size=batch_size)
-vectorize_layer = TextVectorization(
+# vectorize_layer1 = TextVectorization(
+#         standardize=custom_standardization,
+#         output_mode='tf_idf')
+#
+# vectorize_layer1.adapt(raw_train_ds.map(lambda x, y: x))
+
+# vectorization layer 2 with word embedding
+vectorize_layer2 = TextVectorization(
         standardize=custom_standardization,
-        output_mode='tf_idf')
+        output_mode='int')
 
-vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
+vectorize_layer2.adapt(raw_train_ds.map(lambda x, y: x))
+vocab_size = vectorize_layer2.vocabulary_size()
 
-model = tf.keras.Sequential([
-    vectorize_layer,
+# model1 = tf.keras.Sequential([
+#     vectorize_layer1,
+#     tf.keras.layers.Dense(16, activation='relu'),
+#     tf.keras.layers.Dense(1)])
+#
+# model1.summary()
+#
+# model1.compile(loss=losses.BinaryCrossentropy(from_logits=True),
+#                optimizer='adam',
+#                metrics=tf.metrics.BinaryAccuracy(threshold=0.0))
+#
+# epochs = 10
+# model1.fit(
+#         raw_train_ds,
+#         validation_data=raw_val_ds,
+#         epochs=epochs)
+#
+# loss, accuracy1 = model1.evaluate(raw_test_ds)
+#
+# print("Loss: ", loss)
+# print("Accuracy: ", accuracy1)
+
+model2 = tf.keras.Sequential([
+    vectorize_layer2,
+    tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
+    tf.keras.layers.GlobalAveragePooling1D(),
     tf.keras.layers.Dense(16, activation='relu'),
     tf.keras.layers.Dense(1)])
 
-model.compile(loss=losses.BinaryCrossentropy(from_logits=True),
-              optimizer='adam',
-              metrics=tf.metrics.BinaryAccuracy(threshold=0.0))
+model2.compile(loss=losses.BinaryCrossentropy(from_logits=True),
+               optimizer='adam',
+               metrics=tf.metrics.BinaryAccuracy(threshold=0.0))
 
-model.summary()
+model2.summary()
 
-tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir="logs")
-
-epochs = 10
-history = model.fit(
+epochs = 5
+model2.fit(
         raw_train_ds,
         validation_data=raw_val_ds,
-        epochs=epochs,
-        callbacks=[tensorboard_callback])
+        epochs=epochs)
 
-loss, accuracy = model.evaluate(raw_test_ds)
+loss, accuracy2 = model2.evaluate(raw_test_ds)
 
 print("Loss: ", loss)
-print("Accuracy: ", accuracy)
+print("Accuracy: ", accuracy2)
