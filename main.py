@@ -43,7 +43,7 @@ def vectorize_text(text, label):
 def nn():
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
+        tf.keras.layers.Embedding(max_features + 1, 8, mask_zero=True),
         tf.keras.layers.GlobalAveragePooling1D(),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
@@ -57,8 +57,8 @@ def nn():
 def cnn():
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
-        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu',kernel_regularizer=tf.keras.regularizers.l2(0.01), bias_regularizer=tf.keras.regularizers.l2(0.01)),
+        tf.keras.layers.Embedding(max_features + 1, 8, mask_zero=True),
+        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu'),
         tf.keras.layers.GlobalMaxPooling1D(),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
@@ -71,7 +71,7 @@ def cnn():
 def rnn():
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
+        tf.keras.layers.Embedding(max_features + 1, 8, mask_zero=True),
         # tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
         tf.keras.layers.LSTM(4, dropout=0.2, recurrent_dropout=0.2, kernel_regularizer=tf.keras.regularizers.l2(
             0.01), recurrent_regularizer=tf.keras.regularizers.l2(0.01), bias_regularizer=tf.keras.regularizers.l2(0.01)),
@@ -90,19 +90,27 @@ raw_train_ds: tf.data.Dataset = text_dataset_from_directory('aclImdb/train',
                                                             subset='training',
                                                             seed=42)
 
-raw_val_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory(
-    'aclImdb/train', batch_size=batch_size, validation_split=0.2, subset='validation', seed=42)
+raw_val_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImdb/train',
+                                                                         batch_size=batch_size,
+                                                                         validation_split=0.2,
+                                                                         subset='validation',
+                                                                         seed=42)
 
-raw_test_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory(
-    'aclImdb/test', batch_size=batch_size)
+raw_test_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
+                                                                          batch_size=batch_size)
 
 small_train_ds = raw_train_ds.take(60)
 small_val_ds = raw_val_ds.take(60)
 small_test_ds = raw_test_ds.take(60)
 
+max_features = 10000
+sequence_length = 250
+
 vectorize_layer = TextVectorization(
-    standardize=custom_standardization,
-    output_mode='int')
+        standardize=custom_standardization,
+        max_tokens=max_features,
+        output_mode='int',
+        output_sequence_length=sequence_length)
 
 vectorize_layer.adapt(small_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
