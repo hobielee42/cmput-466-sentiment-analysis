@@ -121,7 +121,8 @@ model2.summary()
 model3 = rnn()
 model3.summary()
 
-early_stopping = EarlyStopping(min_delta=0.005, mode='max', monitor='val_acc', patience=2)
+early_stopping = EarlyStopping(
+    min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
 callback = [early_stopping]
 
 epochs = 10
