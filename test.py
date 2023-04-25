@@ -17,7 +17,7 @@ def get_data():
     """
     url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
     dataset = tf.keras.utils.get_file(
-            "aclImdb_v1", url, untar=True, cache_dir='.', cache_subdir='')
+        "aclImdb_v1", url, untar=True, cache_dir='.', cache_subdir='')
     dataset_dir = os.path.join(os.path.dirname(dataset), 'aclImdb')
     train_dir = os.path.join(dataset_dir, 'train')
     os.listdir(train_dir)
@@ -59,7 +59,8 @@ def cnn_builder():
     model = tf.keras.Sequential([
         vectorize_layer,
         tf.keras.layers.Embedding(vocab_size, 32, mask_zero=True),
-        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu'),
+        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu', kernel_regularizer=tf.keras.regularizers.l2(
+            0.01), bias_regularizer=tf.keras.regularizers.l2(0.01)),
         tf.keras.layers.GlobalMaxPooling1D(),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
@@ -75,7 +76,7 @@ def rnn_builder():
         tf.keras.layers.Embedding(vocab_size, 32, mask_zero=True),
         tf.keras.layers.LSTM(32, dropout=0.2, recurrent_dropout=0.2,
                              kernel_regularizer=tf.keras.regularizers.l2(
-                                     0.01), recurrent_regularizer=tf.keras.regularizers.l2(0.01),
+                                 0.01), recurrent_regularizer=tf.keras.regularizers.l2(0.01),
                              bias_regularizer=tf.keras.regularizers.l2(0.01)),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
@@ -106,13 +107,14 @@ small_val_ds = raw_val_ds.take(30)
 small_test_ds = raw_test_ds.take(30)
 
 vectorize_layer = TextVectorization(
-        standardize=custom_standardization,
-        output_mode='int')
+    standardize=custom_standardization,
+    output_mode='int')
 
 vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
 
-stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_binary_accuracy', patience=5)
+stop_early = tf.keras.callbacks.EarlyStopping(
+    monitor='val_binary_accuracy', patience=5)
 
 model1 = nn_builder()
 model1.summary()
@@ -124,27 +126,27 @@ model3 = rnn_builder()
 model3.summary()
 
 early_stopping = EarlyStopping(
-        min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
+    min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
 callback = [early_stopping]
 
 epochs = 10
 model1.fit(
-        raw_train_ds,
-        validation_data=raw_val_ds,
-        epochs=epochs,
-        callbacks=callback)
+    raw_train_ds,
+    validation_data=raw_val_ds,
+    epochs=epochs,
+    callbacks=callback)
 
 model2.fit(
-        raw_train_ds,
-        validation_data=raw_val_ds,
-        epochs=epochs,
-        callbacks=callback)
+    raw_train_ds,
+    validation_data=raw_val_ds,
+    epochs=epochs,
+    callbacks=callback)
 
 model3.fit(
-        raw_train_ds,
-        validation_data=raw_val_ds,
-        epochs=epochs,
-        callbacks=callback)
+    raw_train_ds,
+    validation_data=raw_val_ds,
+    epochs=epochs,
+    callbacks=callback)
 
 loss1, accuracy1 = model1.evaluate(raw_test_ds)
 

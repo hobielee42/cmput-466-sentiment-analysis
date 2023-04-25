@@ -1,0 +1,96 @@
+2023-04-25 15:00:33.909549: I tensorflow/tsl/cuda/cudart_stub.cc:28] Could not find cuda drivers on your machine, GPU will not be used.
+2023-04-25 15:00:35.746717: I tensorflow/tsl/cuda/cudart_stub.cc:28] Could not find cuda drivers on your machine, GPU will not be used.
+2023-04-25 15:00:35.747600: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-04-25 15:00:39.983057: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+Found 25000 files belonging to 2 classes.
+Using 20000 files for training.
+Found 25000 files belonging to 2 classes.
+Using 5000 files for validation.
+Found 25000 files belonging to 2 classes.
+2023-04-25 15:00:47.863171: I tensorflow/core/common_runtime/executor.cc:1197] [/device:CPU:0] (DEBUG INFO) Executor start aborting (this does not indicate an error and you can ignore this message): INVALID_ARGUMENT: You must feed a value for placeholder tensor 'Placeholder/_4' with dtype int32 and shape [20000]
+	 [[{{node Placeholder/_4}}]]
+2023-04-25 15:00:47.863530: I tensorflow/core/common_runtime/executor.cc:1197] [/device:CPU:0] (DEBUG INFO) Executor start aborting (this does not indicate an error and you can ignore this message): INVALID_ARGUMENT: You must feed a value for placeholder tensor 'Placeholder/_4' with dtype int32 and shape [20000]
+	 [[{{node Placeholder/_4}}]]
+Output exceeds the size limit. Open the full output data in a text editor
+Model: "sequential"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ text_vectorization (TextVec  (None, None)             0         
+ torization)                                                     
+                                                                 
+ embedding (Embedding)       (None, None, 32)          3194176   
+                                                                 
+ global_average_pooling1d (G  (None, 32)               0         
+ lobalAveragePooling1D)                                          
+                                                                 
+ dense (Dense)               (None, 16)                528       
+                                                                 
+ dense_1 (Dense)             (None, 1)                 17        
+                                                                 
+=================================================================
+Total params: 3,194,721
+Trainable params: 3,194,721
+Non-trainable params: 0
+_________________________________________________________________
+Model: "sequential_1"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+...
+Trainable params: 3,203,041
+Non-trainable params: 0
+_________________________________________________________________
+Epoch 1/10
+2023-04-25 15:01:01.693844: I tensorflow/core/common_runtime/executor.cc:1197] [/device:CPU:0] (DEBUG INFO) Executor start aborting (this does not indicate an error and you can ignore this message): INVALID_ARGUMENT: You must feed a value for placeholder tensor 'Placeholder/_0' with dtype string and shape [20000]
+	 [[{{node Placeholder/_0}}]]
+2023-04-25 15:01:01.694266: I tensorflow/core/common_runtime/executor.cc:1197] [/device:CPU:0] (DEBUG INFO) Executor start aborting (this does not indicate an error and you can ignore this message): INVALID_ARGUMENT: You must feed a value for placeholder tensor 'Placeholder/_0' with dtype string and shape [20000]
+	 [[{{node Placeholder/_0}}]]
+625/625 [==============================] - ETA: 0s - loss: 0.4604 - binary_accuracy: 0.8059
+2023-04-25 15:01:19.336048: I tensorflow/core/common_runtime/executor.cc:1197] [/device:CPU:0] (DEBUG INFO) Executor start aborting (this does not indicate an error and you can ignore this message): INVALID_ARGUMENT: You must feed a value for placeholder tensor 'Placeholder/_4' with dtype int32 and shape [5000]
+	 [[{{node Placeholder/_4}}]]
+2023-04-25 15:01:19.336514: I tensorflow/core/common_runtime/executor.cc:1197] [/device:CPU:0] (DEBUG INFO) Executor start aborting (this does not indicate an error and you can ignore this message): INVALID_ARGUMENT: You must feed a value for placeholder tensor 'Placeholder/_4' with dtype int32 and shape [5000]
+	 [[{{node Placeholder/_4}}]]
+625/625 [==============================] - 26s 40ms/step - loss: 0.4604 - binary_accuracy: 0.8059 - val_loss: 0.2935 - val_binary_accuracy: 0.8858
+Epoch 2/10
+625/625 [==============================] - 12s 19ms/step - loss: 0.1998 - binary_accuracy: 0.9276 - val_loss: 0.2557 - val_binary_accuracy: 0.8988
+Epoch 3/10
+625/625 [==============================] - 12s 19ms/step - loss: 0.1138 - binary_accuracy: 0.9645 - val_loss: 0.2634 - val_binary_accuracy: 0.8980
+Epoch 4/10
+625/625 [==============================] - 12s 19ms/step - loss: 0.0604 - binary_accuracy: 0.9855 - val_loss: 0.2936 - val_binary_accuracy: 0.8948
+Epoch 1/10
+625/625 [==============================] - 18s 28ms/step - loss: 0.5676 - binary_accuracy: 0.7428 - val_loss: 0.4405 - val_binary_accuracy: 0.8086
+Epoch 2/10
+625/625 [==============================] - 16s 26ms/step - loss: 0.3594 - binary_accuracy: 0.8606 - val_loss: 0.3820 - val_binary_accuracy: 0.8474
+Epoch 3/10
+625/625 [==============================] - 16s 26ms/step - loss: 0.2426 - binary_accuracy: 0.9225 - val_loss: 0.3795 - val_binary_accuracy: 0.8564
+Epoch 4/10
+625/625 [==============================] - 16s 26ms/step - loss: 0.1584 - binary_accuracy: 0.9607 - val_loss: 0.3925 - val_binary_accuracy: 0.8548
+Epoch 5/10
+625/625 [==============================] - 16s 26ms/step - loss: 0.1007 - binary_accuracy: 0.9822 - val_loss: 0.4274 - val_binary_accuracy: 0.8530
+Epoch 1/10
+625/625 [==============================] - 291s 462ms/step - loss: 0.8051 - binary_accuracy: 0.7254 - val_loss: 0.4821 - val_binary_accuracy: 0.8682
+Epoch 2/10
+625/625 [==============================] - 290s 464ms/step - loss: 0.3730 - binary_accuracy: 0.9018 - val_loss: 0.4630 - val_binary_accuracy: 0.8774
+Epoch 3/10
+625/625 [==============================] - 288s 461ms/step - loss: 0.2291 - binary_accuracy: 0.9509 - val_loss: 0.4034 - val_binary_accuracy: 0.8748
+Epoch 4/10
+625/625 [==============================] - 285s 456ms/step - loss: 0.1715 - binary_accuracy: 0.9657 - val_loss: 0.4315 - val_binary_accuracy: 0.8736
+  1/782 [..............................] - ETA: 2:21 - loss: 0.4751 - binary_accuracy: 0.8750
+2023-04-25 15:22:41.864557: I tensorflow/core/common_runtime/executor.cc:1197] [/device:CPU:0] (DEBUG INFO) Executor start aborting (this does not indicate an error and you can ignore this message): INVALID_ARGUMENT: You must feed a value for placeholder tensor 'Placeholder/_4' with dtype int32 and shape [25000]
+	 [[{{node Placeholder/_4}}]]
+2023-04-25 15:22:41.864983: I tensorflow/core/common_runtime/executor.cc:1197] [/device:CPU:0] (DEBUG INFO) Executor start aborting (this does not indicate an error and you can ignore this message): INVALID_ARGUMENT: You must feed a value for placeholder tensor 'Placeholder/_4' with dtype int32 and shape [25000]
+	 [[{{node Placeholder/_4}}]]
+782/782 [==============================] - 13s 16ms/step - loss: 0.3323 - binary_accuracy: 0.8805
+782/782 [==============================] - 3s 4ms/step - loss: 0.4321 - binary_accuracy: 0.8468
+782/782 [==============================] - 57s 72ms/step - loss: 0.4812 - binary_accuracy: 0.8517
+NN
+Loss:  0.3322673439979553
+Accuracy:  0.8805199861526489
+CNN
+Loss:  0.43205761909484863
+Accuracy:  0.8468400239944458
+RNN
+Loss:  0.4811834692955017
+Accuracy:  0.8517199754714966
