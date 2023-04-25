@@ -4,7 +4,6 @@ import shutil
 import string
 
 import tensorflow as tf
-from keras import losses
 from keras.layers import TextVectorization
 from keras.utils import text_dataset_from_directory
 
@@ -37,7 +36,35 @@ def custom_standardization(input_data):
 
 def vectorize_text(text, label):
     text = tf.expand_dims(text, -1)
-    return vectorize_layer2(text), label
+    return vectorize_layer(text), label
+
+
+def nn():
+    model = tf.keras.Sequential([
+        vectorize_layer,
+        tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
+        tf.keras.layers.GlobalAveragePooling1D(),
+        tf.keras.layers.Dense(16, activation='relu'),
+        tf.keras.layers.Dense(1, activation='sigmoid')])
+    model.compile(loss="binary_crossentropy",
+                  optimizer='adam',
+                  metrics=tf.metrics.BinaryAccuracy())
+
+    return model
+
+
+def cnn():
+    model = tf.keras.Sequential([
+        vectorize_layer,
+        tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
+        tf.keras.layers.Conv1D(16, 3, padding='valid', activation='relu'),
+        tf.keras.layers.GlobalMaxPooling1D(),
+        tf.keras.layers.Dense(16, activation='relu'),
+        tf.keras.layers.Dense(1, activation='sigmoid')])
+    model.compile(loss="binary_crossentropy",
+                  optimizer='adam',
+                  metrics=tf.metrics.BinaryAccuracy())
+    return model
 
 
 # main
@@ -62,12 +89,12 @@ raw_test_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
 # vectorize_layer1.adapt(raw_train_ds.map(lambda x, y: x))
 
 # vectorization layer 2 with word embedding
-vectorize_layer2 = TextVectorization(
+vectorize_layer = TextVectorization(
         standardize=custom_standardization,
         output_mode='int')
 
-vectorize_layer2.adapt(raw_train_ds.map(lambda x, y: x))
-vocab_size = vectorize_layer2.vocabulary_size()
+vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
+vocab_size = vectorize_layer.vocabulary_size()
 
 # model1 = tf.keras.Sequential([
 #     vectorize_layer1,
@@ -91,26 +118,27 @@ vocab_size = vectorize_layer2.vocabulary_size()
 # print("Loss: ", loss)
 # print("Accuracy: ", accuracy1)
 
-model2 = tf.keras.Sequential([
-    vectorize_layer2,
-    tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
-    tf.keras.layers.GlobalAveragePooling1D(),
-    tf.keras.layers.Dense(16, activation='relu'),
-    tf.keras.layers.Dense(1)])
 
-model2.compile(loss=losses.BinaryCrossentropy(from_logits=True),
-               optimizer='adam',
-               metrics=tf.metrics.BinaryAccuracy(threshold=0.0))
-
-model2.summary()
+model1 = nn()
+model1.summary()
 
 epochs = 5
+model1.fit(
+        raw_train_ds,
+        validation_data=raw_val_ds,
+        epochs=epochs)
+
+model2 = cnn()
+model2.summary()
+
 model2.fit(
         raw_train_ds,
         validation_data=raw_val_ds,
         epochs=epochs)
 
-loss, accuracy2 = model2.evaluate(raw_test_ds)
+loss1, accuracy1 = model1.evaluate(raw_test_ds)
 
-print("Loss: ", loss)
-print("Accuracy: ", accuracy2)
+loss2, accuracy2 = model2.evaluate(raw_test_ds)
+
+print("Loss: ", loss1)
+print("Accuracy: ", accuracy1)
