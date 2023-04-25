@@ -3,8 +3,8 @@ import re
 import shutil
 import string
 
+import keras_tuner as kt
 import tensorflow as tf
-from keras.callbacks import EarlyStopping
 from keras.layers import TextVectorization
 from keras.utils import text_dataset_from_directory
 
@@ -41,7 +41,7 @@ def vectorize_text(text, label):
     return vectorize_layer(text), label
 
 
-def nn(hp):
+def nn_builder(hp):
     hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
     hp_units = hp.Int('units', min_value=16, max_value=64, step=16)
     model = tf.keras.Sequential([
@@ -57,7 +57,7 @@ def nn(hp):
     return model
 
 
-def cnn(hp):
+def cnn_builder(hp):
     hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
     hp_units = hp.Int('units', min_value=16, max_value=64, step=16)
     hp_filters = hp.Int('filters', min_value=32, max_value=128, step=32)
@@ -75,7 +75,7 @@ def cnn(hp):
     return model
 
 
-def rnn(hp):
+def rnn_builder(hp):
     hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
     hp_dense_units = hp.Int('dense_units', min_value=16, max_value=64, step=16)
     hp_lstm_units = hp.Int('lstm_units', min_value=32, max_value=128, step=32)
@@ -121,58 +121,67 @@ vectorize_layer = TextVectorization(
 vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
 
-model1 = nn()
-model1.summary()
+stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_binary_accuracy', patience=5)
 
-model2 = cnn()
-model2.summary()
+nn_tuner = kt.Hyperband(nn_builder,
+                        objective='val_binary_accuracy',
+                        max_epochs=10,
+                        factor=3,
+                        directory='my_dir',
+                        project_name='my_proj')
 
-model3 = rnn()
-model3.summary()
-
-early_stopping = EarlyStopping(
-        min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
-callback = [early_stopping]
-
-epochs = 10
-model1.fit(
-        # raw_train_ds,
-        # validation_data=raw_val_ds,
-        raw_train_ds,
-        validation_data=raw_val_ds,
-        epochs=epochs,
-        callbacks=callback)
-
-model2.fit(
-        # raw_train_ds,
-        # validation_data=raw_val_ds,
-        raw_train_ds,
-        validation_data=raw_val_ds,
-        epochs=epochs,
-        callbacks=callback)
-
-model3.fit(
-        # raw_train_ds,
-        # validation_data=raw_val_ds,
-        raw_train_ds,
-        validation_data=raw_val_ds,
-        epochs=epochs,
-        callbacks=callback)
-
-loss1, accuracy1 = model1.evaluate(raw_test_ds)
-
-loss2, accuracy2 = model2.evaluate(raw_test_ds)
-
-loss3, accuracy3 = model3.evaluate(raw_test_ds)
-
-print('NN')
-print("Loss: ", loss1)
-print("Accuracy: ", accuracy1)
-
-print('CNN')
-print("Loss: ", loss2)
-print("Accuracy: ", accuracy2)
-
-print('RNN')
-print("Loss: ", loss3)
-print("Accuracy: ", accuracy3)
+# model1 = nn_builder()
+# model1.summary()
+#
+# model2 = cnn_builder()
+# model2.summary()
+#
+# model3 = rnn_builder()
+# model3.summary()
+#
+# early_stopping = EarlyStopping(
+#         min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
+# callback = [early_stopping]
+#
+# epochs = 10
+# model1.fit(
+#         # raw_train_ds,
+#         # validation_data=raw_val_ds,
+#         raw_train_ds,
+#         validation_data=raw_val_ds,
+#         epochs=epochs,
+#         callbacks=callback)
+#
+# model2.fit(
+#         # raw_train_ds,
+#         # validation_data=raw_val_ds,
+#         raw_train_ds,
+#         validation_data=raw_val_ds,
+#         epochs=epochs,
+#         callbacks=callback)
+#
+# model3.fit(
+#         # raw_train_ds,
+#         # validation_data=raw_val_ds,
+#         raw_train_ds,
+#         validation_data=raw_val_ds,
+#         epochs=epochs,
+#         callbacks=callback)
+#
+# loss1, accuracy1 = model1.evaluate(raw_test_ds)
+#
+# loss2, accuracy2 = model2.evaluate(raw_test_ds)
+#
+# loss3, accuracy3 = model3.evaluate(raw_test_ds)
+#
+# print('NN')
+# print("Loss: ", loss1)
+# print("Accuracy: ", accuracy1)
+#
+# print('CNN')
+# print("Loss: ", loss2)
+# print("Accuracy: ", accuracy2)
+#
+# print('RNN')
+# print("Loss: ", loss3)
+# print("Accuracy: ", accuracy3)
