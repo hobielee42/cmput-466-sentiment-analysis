@@ -130,6 +130,13 @@ nn_tuner = kt.Hyperband(nn_builder,
                         directory='my_dir',
                         project_name='my_proj')
 
+nn_tuner.search(raw_train_ds, validation_data=raw_val_ds, epochs=5, callbacks=[stop_early])
+
+# Get the optimal hyperparameters
+best_hps = nn_tuner.get_best_hyperparameters(num_trials=1)[0]
+print(f'embed_dim: {best_hps.get("embed_dim")}'
+      f'units: {best_hps.get("units")}')
+
 # model1 = nn_builder()
 # model1.summary()
 #
