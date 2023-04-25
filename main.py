@@ -3,8 +3,8 @@ import re
 import shutil
 import string
 
-import keras_tuner as kt
 import tensorflow as tf
+from keras.callbacks import EarlyStopping
 from keras.layers import TextVectorization
 from keras.utils import text_dataset_from_directory
 
@@ -41,14 +41,12 @@ def vectorize_text(text, label):
     return vectorize_layer(text), label
 
 
-def nn_builder(hp):
-    hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
-    hp_units = hp.Int('units', min_value=16, max_value=64, step=16)
+def nn_builder():
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, hp_embed_dim, mask_zero=True),
+        tf.keras.layers.Embedding(vocab_size, 32, mask_zero=True),
         tf.keras.layers.GlobalAveragePooling1D(),
-        tf.keras.layers.Dense(hp_units, activation='relu'),
+        tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
                   optimizer='adam',
@@ -57,17 +55,14 @@ def nn_builder(hp):
     return model
 
 
-def cnn_builder(hp):
-    hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
-    hp_units = hp.Int('units', min_value=16, max_value=64, step=16)
-    hp_filters = hp.Int('filters', min_value=32, max_value=128, step=32)
-    hp_kernel_size = hp.Int('kernel_size', min_value=2, max_value=5, step=1)
+def cnn_builder():
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, hp_embed_dim, mask_zero=True),
-        tf.keras.layers.Conv1D(hp_filters, hp_kernel_size, padding='valid', activation='relu'),
+        tf.keras.layers.Embedding(vocab_size, 32, mask_zero=True),
+        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu', kernel_regularizer=tf.keras.regularizers.l2(
+                0.01), bias_regularizer=tf.keras.regularizers.l2(0.01)),
         tf.keras.layers.GlobalMaxPooling1D(),
-        tf.keras.layers.Dense(hp_units, activation='relu'),
+        tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
                   optimizer='adam',
@@ -75,18 +70,15 @@ def cnn_builder(hp):
     return model
 
 
-def rnn_builder(hp):
-    hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
-    hp_dense_units = hp.Int('dense_units', min_value=16, max_value=64, step=16)
-    hp_lstm_units = hp.Int('lstm_units', min_value=32, max_value=128, step=32)
+def rnn_builder():
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, hp_embed_dim, mask_zero=True),
-        tf.keras.layers.LSTM(hp_lstm_units, dropout=0.2, recurrent_dropout=0.2,
+        tf.keras.layers.Embedding(vocab_size, 32, mask_zero=True),
+        tf.keras.layers.LSTM(32, dropout=0.2, recurrent_dropout=0.2,
                              kernel_regularizer=tf.keras.regularizers.l2(
                                      0.01), recurrent_regularizer=tf.keras.regularizers.l2(0.01),
                              bias_regularizer=tf.keras.regularizers.l2(0.01)),
-        tf.keras.layers.Dense(hp_dense_units, activation='relu'),
+        tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
                   optimizer='adam',
@@ -95,6 +87,8 @@ def rnn_builder(hp):
 
 
 # main
+
+# load data
 raw_train_ds: tf.data.Dataset = text_dataset_from_directory('aclImdb/train',
                                                             batch_size=batch_size,
                                                             validation_split=0.2,
@@ -110,85 +104,75 @@ raw_val_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImd
 raw_test_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
                                                                           batch_size=batch_size)
 
-small_train_ds = raw_train_ds.take(30)
-small_val_ds = raw_val_ds.take(30)
-small_test_ds = raw_test_ds.take(30)
-
+# vectorize layer
 vectorize_layer = TextVectorization(
         standardize=custom_standardization,
         output_mode='int')
 
+# adapt to train data
 vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
 
-stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_binary_accuracy', patience=5)
+stop_early = tf.keras.callbacks.EarlyStopping(
+        monitor='val_binary_accuracy', patience=5)
 
-nn_tuner = kt.Hyperband(nn_builder,
-                        objective='val_binary_accuracy',
-                        max_epochs=10,
-                        factor=3,
-                        directory='my_dir',
-                        project_name='my_proj')
+model_nn = nn_builder()
+model_nn.summary()
 
-nn_tuner.search(raw_train_ds, validation_data=raw_val_ds, epochs=5, callbacks=[stop_early])
+model_cnn = cnn_builder()
+model_cnn.summary()
 
-# Get the optimal hyperparameters
-best_hps = nn_tuner.get_best_hyperparameters(num_trials=1)[0]
-print(f'embed_dim: {best_hps.get("embed_dim")}'
-      f'units: {best_hps.get("units")}')
+model_rnn = rnn_builder()
+model_rnn.summary()
 
-# model1 = nn_builder()
-# model1.summary()
-#
-# model2 = cnn_builder()
-# model2.summary()
-#
-# model3 = rnn_builder()
-# model3.summary()
-#
-# early_stopping = EarlyStopping(
-#         min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
-# callback = [early_stopping]
-#
-# epochs = 10
-# model1.fit(
-#         # raw_train_ds,
-#         # validation_data=raw_val_ds,
-#         raw_train_ds,
-#         validation_data=raw_val_ds,
-#         epochs=epochs,
-#         callbacks=callback)
-#
-# model2.fit(
-#         # raw_train_ds,
-#         # validation_data=raw_val_ds,
-#         raw_train_ds,
-#         validation_data=raw_val_ds,
-#         epochs=epochs,
-#         callbacks=callback)
-#
-# model3.fit(
-#         # raw_train_ds,
-#         # validation_data=raw_val_ds,
-#         raw_train_ds,
-#         validation_data=raw_val_ds,
-#         epochs=epochs,
-#         callbacks=callback)
-#
-# loss1, accuracy1 = model1.evaluate(raw_test_ds)
-#
-# loss2, accuracy2 = model2.evaluate(raw_test_ds)
-#
-# loss3, accuracy3 = model3.evaluate(raw_test_ds)
-#
-# print('NN')
-# print("Loss: ", loss1)
-# print("Accuracy: ", accuracy1)
-#
-# print('CNN')
-# print("Loss: ", loss2)
-# print("Accuracy: ", accuracy2)
-#
-# print('RNN')
-# print("Loss: ", loss3)
-# print("Accuracy: ", accuracy3)
+early_stopping = EarlyStopping(
+        min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
+callback = [early_stopping]
+
+epochs = 10
+model_nn.fit(
+        raw_train_ds,
+        validation_data=raw_val_ds,
+        epochs=epochs,
+        callbacks=callback)
+
+model_cnn.fit(
+        raw_train_ds,
+        validation_data=raw_val_ds,
+        epochs=epochs,
+        callbacks=callback)
+
+model_rnn.fit(
+        raw_train_ds,
+        validation_data=raw_val_ds,
+        epochs=epochs,
+        callbacks=callback)
+
+_, accuracy1 = model_nn.evaluate(raw_test_ds)
+
+_, accuracy2 = model_cnn.evaluate(raw_test_ds)
+
+_, accuracy3 = model_rnn.evaluate(raw_test_ds)
+
+# baseline
+train_pos = raw_train_ds.unbatch().map(lambda x, y: y).reduce(tf.constant(0), lambda x, y: x + y).numpy()
+
+train_neg = raw_train_ds.unbatch().map(lambda x, y: y).reduce(tf.constant(0), lambda x, y: x + (1 - y)).numpy()
+
+prediction = 1 if train_pos > train_neg else 0
+
+num_test = raw_test_ds.unbatch().map(lambda x, y: y).reduce(tf.constant(0), lambda x, _: x + 1).numpy()
+accuracy0 = raw_test_ds.unbatch().map(lambda x, y: y).reduce(tf.constant(0),
+                                                             lambda x, y: x + int(y == 1)).numpy() / num_test
+
+print('Baseline (majority class classifier)')
+print("Accuracy: ", accuracy0)
+
+print('NN')
+print("Accuracy: ", accuracy1)
+
+print('CNN')
+print("Accuracy: ", accuracy2)
+
+print('RNN')
+print("Accuracy: ", accuracy3)
