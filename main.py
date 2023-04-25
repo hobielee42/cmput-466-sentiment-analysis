@@ -57,7 +57,7 @@ def cnn():
     model = tf.keras.Sequential([
         vectorize_layer,
         tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
-        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu'),
+        tf.keras.layers.Conv1D(32, [2,3,4,5], padding='valid', activation='relu'),
         tf.keras.layers.GlobalMaxPooling1D(),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
@@ -82,13 +82,7 @@ raw_val_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/train',
 
 raw_test_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
                                                          batch_size=batch_size)
-# vectorize_layer1 = TextVectorization(
-#         standardize=custom_standardization,
-#         output_mode='tf_idf')
-#
-# vectorize_layer1.adapt(raw_train_ds.map(lambda x, y: x))
 
-# vectorization layer 2 with word embedding
 vectorize_layer = TextVectorization(
         standardize=custom_standardization,
         output_mode='int')
@@ -96,40 +90,19 @@ vectorize_layer = TextVectorization(
 vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
 
-# model1 = tf.keras.Sequential([
-#     vectorize_layer1,
-#     tf.keras.layers.Dense(16, activation='relu'),
-#     tf.keras.layers.Dense(1)])
-#
-# model1.summary()
-#
-# model1.compile(loss=losses.BinaryCrossentropy(from_logits=True),
-#                optimizer='adam',
-#                metrics=tf.metrics.BinaryAccuracy(threshold=0.0))
-#
-# epochs = 10
-# model1.fit(
-#         raw_train_ds,
-#         validation_data=raw_val_ds,
-#         epochs=epochs)
-#
-# loss, accuracy1 = model1.evaluate(raw_test_ds)
-#
-# print("Loss: ", loss)
-# print("Accuracy: ", accuracy1)
 
 
 model1 = nn()
 model1.summary()
+
+model2 = cnn()
+model2.summary()
 
 epochs = 5
 model1.fit(
         raw_train_ds,
         validation_data=raw_val_ds,
         epochs=epochs)
-
-model2 = cnn()
-model2.summary()
 
 model2.fit(
         raw_train_ds,
