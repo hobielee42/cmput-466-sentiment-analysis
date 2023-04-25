@@ -57,7 +57,7 @@ def cnn():
     model = tf.keras.Sequential([
         vectorize_layer,
         tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
-        tf.keras.layers.Conv1D(16, 3, padding='valid', activation='relu'),
+        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu'),
         tf.keras.layers.GlobalMaxPooling1D(),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
