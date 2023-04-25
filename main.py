@@ -4,6 +4,7 @@ import shutil
 import string
 
 import tensorflow as tf
+from keras.callbacks import EarlyStopping
 from keras.layers import TextVectorization
 from keras.utils import text_dataset_from_directory
 
@@ -16,7 +17,7 @@ def get_data():
     """
     url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
     dataset = tf.keras.utils.get_file(
-        "aclImdb_v1", url, untar=True, cache_dir='.', cache_subdir='')
+            "aclImdb_v1", url, untar=True, cache_dir='.', cache_subdir='')
     dataset_dir = os.path.join(os.path.dirname(dataset), 'aclImdb')
     train_dir = os.path.join(dataset_dir, 'train')
     os.listdir(train_dir)
@@ -74,7 +75,8 @@ def rnn():
         tf.keras.layers.Embedding(vocab_size, 100, mask_zero=True),
         # tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
         tf.keras.layers.LSTM(32, dropout=0.2, recurrent_dropout=0.2, kernel_regularizer=tf.keras.regularizers.l2(
-            0.01), recurrent_regularizer=tf.keras.regularizers.l2(0.01), bias_regularizer=tf.keras.regularizers.l2(0.01)),
+                0.01), recurrent_regularizer=tf.keras.regularizers.l2(0.01),
+                             bias_regularizer=tf.keras.regularizers.l2(0.01)),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
@@ -99,11 +101,9 @@ raw_val_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImd
 raw_test_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
                                                                           batch_size=batch_size)
 
-small_train_ds = raw_train_ds.take(60)
-small_val_ds = raw_val_ds.take(60)
-small_test_ds = raw_test_ds.take(60)
-
-
+small_train_ds = raw_train_ds.take(30)
+small_val_ds = raw_val_ds.take(30)
+small_test_ds = raw_test_ds.take(30)
 
 vectorize_layer = TextVectorization(
         standardize=custom_standardization,
@@ -121,27 +121,33 @@ model2.summary()
 model3 = rnn()
 model3.summary()
 
-epochs = 5
+early_stopping = EarlyStopping(min_delta=0.005, mode='max', monitor='val_acc', patience=2)
+callback = [early_stopping]
+
+epochs = 10
 model1.fit(
-    # raw_train_ds,
-    # validation_data=raw_val_ds,
-    small_train_ds,
-    validation_data=small_val_ds,
-    epochs=epochs)
+        # raw_train_ds,
+        # validation_data=raw_val_ds,
+        small_train_ds,
+        validation_data=small_val_ds,
+        epochs=epochs,
+        callbacks=callback)
 
 model2.fit(
-    # raw_train_ds,
-    # validation_data=raw_val_ds,
-    small_train_ds,
-    validation_data=small_val_ds,
-    epochs=epochs)
+        # raw_train_ds,
+        # validation_data=raw_val_ds,
+        small_train_ds,
+        validation_data=small_val_ds,
+        epochs=epochs,
+        callbacks=callback)
 
 model3.fit(
-    # raw_train_ds,
-    # validation_data=raw_val_ds,
-    small_train_ds,
-    validation_data=small_val_ds,
-    epochs=epochs)
+        # raw_train_ds,
+        # validation_data=raw_val_ds,
+        small_train_ds,
+        validation_data=small_val_ds,
+        epochs=epochs,
+        callbacks=callback)
 
 loss1, accuracy1 = model1.evaluate(small_test_ds)
 
