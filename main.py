@@ -140,5 +140,10 @@ loss1, accuracy1 = model1.evaluate(raw_test_ds)
 
 loss2, accuracy2 = model2.evaluate(raw_test_ds)
 
+print('NN')
 print("Loss: ", loss1)
 print("Accuracy: ", accuracy1)
+
+print('CNN')
+print("Loss: ", loss2)
+print("Accuracy: ", accuracy2)
