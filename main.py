@@ -16,7 +16,7 @@ def get_data():
     """
     url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
     dataset = tf.keras.utils.get_file(
-        "aclImdb_v1", url, untar=True, cache_dir='.', cache_subdir='')
+            "aclImdb_v1", url, untar=True, cache_dir='.', cache_subdir='')
     dataset_dir = os.path.join(os.path.dirname(dataset), 'aclImdb')
     train_dir = os.path.join(dataset_dir, 'train')
     os.listdir(train_dir)
@@ -82,27 +82,27 @@ def rnn():
 
 
 # main
-raw_train_ds = text_dataset_from_directory('aclImdb/train',
-                                           batch_size=batch_size,
-                                           validation_split=0.2,
-                                           subset='training',
-                                           seed=42)
+raw_train_ds: tf.data.Dataset = text_dataset_from_directory('aclImdb/train',
+                                                            batch_size=batch_size,
+                                                            validation_split=0.2,
+                                                            subset='training',
+                                                            seed=42)
 
-raw_val_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/train',
-                                                        batch_size=batch_size,
-                                                        validation_split=0.2,
-                                                        subset='validation',
-                                                        seed=42)
+raw_val_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImdb/train',
+                                                                         batch_size=batch_size,
+                                                                         validation_split=0.2,
+                                                                         subset='validation',
+                                                                         seed=42)
 
-raw_test_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
-                                                         batch_size=batch_size)
+raw_test_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
+                                                                          batch_size=batch_size)
 
-small_train_ds = raw_train_ds.shuffle(buffer_size=10000, seed=42).take(2000)
-small_val_ds = raw_val_ds.shuffle(buffer_size=2500, seed=42).take(500)
+small_train_ds = raw_train_ds.take(2000)
+small_val_ds = raw_val_ds.take(500)
 
 vectorize_layer = TextVectorization(
-    standardize=custom_standardization,
-    output_mode='int')
+        standardize=custom_standardization,
+        output_mode='int')
 
 vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
@@ -118,11 +118,11 @@ model3.summary()
 
 epochs = 5
 model1.fit(
-    # raw_train_ds,
-    # validation_data=raw_val_ds,
-    small_train_ds,
-    validation_data=small_val_ds,
-    epochs=epochs)
+        # raw_train_ds,
+        # validation_data=raw_val_ds,
+        small_train_ds,
+        validation_data=small_val_ds,
+        epochs=epochs)
 
 # model2.fit(
 #         raw_train_ds,
@@ -130,11 +130,11 @@ model1.fit(
 #         epochs=epochs)
 
 model3.fit(
-    # raw_train_ds,
-    # validation_data=raw_val_ds,
-    small_train_ds,
-    validation_data=small_val_ds,
-    epochs=epochs)
+        # raw_train_ds,
+        # validation_data=raw_val_ds,
+        small_train_ds,
+        validation_data=small_val_ds,
+        epochs=epochs)
 
 loss1, accuracy1 = model1.evaluate(raw_test_ds)
 
