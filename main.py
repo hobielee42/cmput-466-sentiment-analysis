@@ -41,12 +41,14 @@ def vectorize_text(text, label):
     return vectorize_layer(text), label
 
 
-def nn():
+def nn(hp):
+    hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
+    hp_units = hp.Int('units', min_value=16, max_value=64, step=16)
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, 100, mask_zero=True),
+        tf.keras.layers.Embedding(vocab_size, hp_embed_dim, mask_zero=True),
         tf.keras.layers.GlobalAveragePooling1D(),
-        tf.keras.layers.Dense(16, activation='relu'),
+        tf.keras.layers.Dense(hp_units, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
                   optimizer='adam',
@@ -55,13 +57,17 @@ def nn():
     return model
 
 
-def cnn():
+def cnn(hp):
+    hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
+    hp_units = hp.Int('units', min_value=16, max_value=64, step=16)
+    hp_filters = hp.Int('filters', min_value=32, max_value=128, step=32)
+    hp_kernel_size = hp.Int('kernel_size', min_value=2, max_value=5, step=1)
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, 100, mask_zero=True),
-        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu'),
+        tf.keras.layers.Embedding(vocab_size, hp_embed_dim, mask_zero=True),
+        tf.keras.layers.Conv1D(hp_filters, hp_kernel_size, padding='valid', activation='relu'),
         tf.keras.layers.GlobalMaxPooling1D(),
-        tf.keras.layers.Dense(16, activation='relu'),
+        tf.keras.layers.Dense(hp_units, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
                   optimizer='adam',
@@ -69,15 +75,18 @@ def cnn():
     return model
 
 
-def rnn():
+def rnn(hp):
+    hp_embed_dim = hp.Int('embed_dim', min_value=32, max_value=316, step=32)
+    hp_dense_units = hp.Int('dense_units', min_value=16, max_value=64, step=16)
+    hp_lstm_units = hp.Int('lstm_units', min_value=32, max_value=128, step=32)
     model = tf.keras.Sequential([
         vectorize_layer,
-        tf.keras.layers.Embedding(vocab_size, 100, mask_zero=True),
-        # tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
-        tf.keras.layers.LSTM(32, dropout=0.2, recurrent_dropout=0.2, kernel_regularizer=tf.keras.regularizers.l2(
-                0.01), recurrent_regularizer=tf.keras.regularizers.l2(0.01),
+        tf.keras.layers.Embedding(vocab_size, hp_embed_dim, mask_zero=True),
+        tf.keras.layers.LSTM(hp_lstm_units, dropout=0.2, recurrent_dropout=0.2,
+                             kernel_regularizer=tf.keras.regularizers.l2(
+                                     0.01), recurrent_regularizer=tf.keras.regularizers.l2(0.01),
                              bias_regularizer=tf.keras.regularizers.l2(0.01)),
-        tf.keras.layers.Dense(16, activation='relu'),
+        tf.keras.layers.Dense(hp_dense_units, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
                   optimizer='adam',
@@ -109,7 +118,7 @@ vectorize_layer = TextVectorization(
         standardize=custom_standardization,
         output_mode='int')
 
-vectorize_layer.adapt(small_train_ds.map(lambda x, y: x))
+vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
 
 model1 = nn()
@@ -122,39 +131,39 @@ model3 = rnn()
 model3.summary()
 
 early_stopping = EarlyStopping(
-    min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
+        min_delta=0.005, mode='max', monitor='val_binary_accuracy', patience=2)
 callback = [early_stopping]
 
 epochs = 10
 model1.fit(
         # raw_train_ds,
         # validation_data=raw_val_ds,
-        small_train_ds,
-        validation_data=small_val_ds,
+        raw_train_ds,
+        validation_data=raw_val_ds,
         epochs=epochs,
         callbacks=callback)
 
 model2.fit(
         # raw_train_ds,
         # validation_data=raw_val_ds,
-        small_train_ds,
-        validation_data=small_val_ds,
+        raw_train_ds,
+        validation_data=raw_val_ds,
         epochs=epochs,
         callbacks=callback)
 
 model3.fit(
         # raw_train_ds,
         # validation_data=raw_val_ds,
-        small_train_ds,
-        validation_data=small_val_ds,
+        raw_train_ds,
+        validation_data=raw_val_ds,
         epochs=epochs,
         callbacks=callback)
 
-loss1, accuracy1 = model1.evaluate(small_test_ds)
+loss1, accuracy1 = model1.evaluate(raw_test_ds)
 
-loss2, accuracy2 = model2.evaluate(small_test_ds)
+loss2, accuracy2 = model2.evaluate(raw_test_ds)
 
-loss3, accuracy3 = model3.evaluate(small_test_ds)
+loss3, accuracy3 = model3.evaluate(raw_test_ds)
 
 print('NN')
 print("Loss: ", loss1)
