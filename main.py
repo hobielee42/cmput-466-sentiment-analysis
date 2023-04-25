@@ -73,7 +73,7 @@ def rnn():
         vectorize_layer,
         tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
         # tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
-        tf.keras.layers.LSTM(32),
+        tf.keras.layers.LSTM(32, dropout=0.2, recurrent_dropout=0.2),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
