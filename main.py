@@ -72,7 +72,8 @@ def rnn():
     model = tf.keras.Sequential([
         vectorize_layer,
         tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
-        tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
+        # tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
+        tf.keras.layers.LSTM(32),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
     model.compile(loss="binary_crossentropy",
@@ -97,14 +98,14 @@ raw_val_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImd
 raw_test_ds: tf.data.Dataset = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
                                                                           batch_size=batch_size)
 
-small_train_ds = raw_train_ds.take(2000)
-small_val_ds = raw_val_ds.take(500)
+small_train_ds = raw_train_ds.take(60)
+small_val_ds = raw_val_ds.take(60)
 
 vectorize_layer = TextVectorization(
         standardize=custom_standardization,
         output_mode='int')
 
-vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
+vectorize_layer.adapt(small_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
 
 model1 = nn()
