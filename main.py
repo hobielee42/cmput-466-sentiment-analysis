@@ -15,7 +15,8 @@ def get_data():
     Download and extract the IMDB dataset.
     """
     url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
-    dataset = tf.keras.utils.get_file("aclImdb_v1", url, untar=True, cache_dir='.', cache_subdir='')
+    dataset = tf.keras.utils.get_file(
+        "aclImdb_v1", url, untar=True, cache_dir='.', cache_subdir='')
     dataset_dir = os.path.join(os.path.dirname(dataset), 'aclImdb')
     train_dir = os.path.join(dataset_dir, 'train')
     os.listdir(train_dir)
@@ -57,7 +58,7 @@ def cnn():
     model = tf.keras.Sequential([
         vectorize_layer,
         tf.keras.layers.Embedding(vocab_size, 8, mask_zero=True),
-        tf.keras.layers.Conv1D(32, [2,3,4,5], padding='valid', activation='relu'),
+        tf.keras.layers.Conv1D(32, 3, padding='valid', activation='relu'),
         tf.keras.layers.GlobalMaxPooling1D(),
         tf.keras.layers.Dense(16, activation='relu'),
         tf.keras.layers.Dense(1, activation='sigmoid')])
@@ -84,12 +85,11 @@ raw_test_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/test',
                                                          batch_size=batch_size)
 
 vectorize_layer = TextVectorization(
-        standardize=custom_standardization,
-        output_mode='int')
+    standardize=custom_standardization,
+    output_mode='int')
 
 vectorize_layer.adapt(raw_train_ds.map(lambda x, y: x))
 vocab_size = vectorize_layer.vocabulary_size()
-
 
 
 model1 = nn()
@@ -100,14 +100,14 @@ model2.summary()
 
 epochs = 5
 model1.fit(
-        raw_train_ds,
-        validation_data=raw_val_ds,
-        epochs=epochs)
+    raw_train_ds,
+    validation_data=raw_val_ds,
+    epochs=epochs)
 
 model2.fit(
-        raw_train_ds,
-        validation_data=raw_val_ds,
-        epochs=epochs)
+    raw_train_ds,
+    validation_data=raw_val_ds,
+    epochs=epochs)
 
 loss1, accuracy1 = model1.evaluate(raw_test_ds)
 
